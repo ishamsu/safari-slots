@@ -8,12 +8,12 @@ export default async function handler(req, res) {
 
   try {
     const response = await axios.post(
-      `https://tickets.nagaraholetigerreserve.com/getSafariTimeSlotsNew/3`,
+      `https://tickets.nagaraholetigerreserve.com/getSafariAvailability/3`,
       payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
     );
 
     // res.setHeader("Access-Control-Allow-Origin", "*"); // Set the Access-Control-Allow-Origin header

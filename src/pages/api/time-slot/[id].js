@@ -4,16 +4,16 @@ axios.defaults.headers.post["Content-Type"] =
 "application/x-www-form-urlencoded";
 
 export default async function handler(req, res) {
-  const { body: payload } = req;
+  const { body: payload, query: { id } } = req;
 
   try {
     const response = await axios.post(
-      `https://tickets.nagaraholetigerreserve.com/getSafariAvailability/3`,
+      `https://tickets.nagaraholetigerreserve.com/getSafariTimeSlotsNew/${id}`,
       payload, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     // res.setHeader("Access-Control-Allow-Origin", "*"); // Set the Access-Control-Allow-Origin header

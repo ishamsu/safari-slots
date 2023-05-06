@@ -36,4 +36,33 @@
   margin-right: -14px;
   z-index: 1;
   }
+  .gradient-button {
+    background: linear-gradient(to bottom, #4F86F7, #2F5EEF);
+    border-radius: 5px;
+    border: none;
+    color: #FFF;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+  }
+  
+  .gradient-button:hover {
+    opacity: 0.9;
+  }
+  
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .sibling-text {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+  }
+  
+  
   

@@ -7,11 +7,16 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { useState } from "react";
 import { Dialog, DialogTitle } from "@mui/material";
+import Box from "@mui/material/Box";
+import Tab from "@mui/material/Tab";
+import TabContext from "@mui/lab/TabContext";
+import TabList from "@mui/lab/TabList";
+import TabPanel from "@mui/lab/TabPanel";
 const inter = Inter({ subsets: ["latin"] });
 
-const fetchCount = async (payload) => {
+const fetchCount = async (payload,id) => {
   return await axios
-    .post(`api/count`, payload, {
+    .post(`api/seats/${id}`, payload, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -21,14 +26,15 @@ const fetchCount = async (payload) => {
     });
 };
 
-const getTimeSlotVehicleCount = async (data, date) => {
+const getTimeSlotVehicleCount = async (data, date,id) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(data, "text/html");
   const options = doc.querySelectorAll("#timeslots option");
   const timeslots = {};
-
+  let ids = [];
   for (let i = 1; i < options.length; i++) {
     timeslots[options[i].value] = options[i].text;
+    ids.push(options[i].text);
   }
   const vehicleCounts = await Promise.all(
     Object.keys(timeslots).map((item) => {
@@ -36,24 +42,31 @@ const getTimeSlotVehicleCount = async (data, date) => {
         timeslots: item,
         startSafari: date,
         transportation: "1",
-      });
+      },id);
     })
   );
-  const timeSlotVehicleCount = {};
+  const timeSlotVehicleCount = {
+    result: {},
+    timeslots: ids,
+  };
   Object.values(timeslots).forEach((timeSlot, index) => {
-    timeSlotVehicleCount[timeSlot] = vehicleCounts[index]>=1 ?vehicleCounts[index] : 0;
+    timeSlotVehicleCount.result[timeSlot] =
+      vehicleCounts[index] >= 1 ? vehicleCounts[index] : 0;
   });
+  console.log("first 1", ids, timeSlotVehicleCount);
+
   return timeSlotVehicleCount;
 };
-const fetchtweet = async (payload,isoDate) => {
+const fetchtweet = async (payload, isoDate,id) => {
   return await axios
-    .post(`api/hello`, payload, {
+    .post(`api/time-slot/${id}`, payload, {
       headers: {
         "Content-Type": "application/json",
       },
     })
     .then((result) => {
-      return getTimeSlotVehicleCount(result.data,isoDate ).then((data) => {
+      return getTimeSlotVehicleCount(result.data, isoDate,id).then((data) => {
+        console.log("first", data);
         return data;
       });
     })
@@ -77,7 +90,45 @@ const shouldDisableMonth = (date) => {
 
 export default function Home() {
   const [show, setShow] = useState("");
+  const [show1, setShow1] = useState("");
   const [open, setOpen] = useState(false);
+  const [dateShow, setDate] = useState("");
+  const [value, setValue] = useState("1");
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    console.log("switch tab", newValue);
+    const date = new Date(dateShow);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+    }).format(date);
+    const formattedDate = `${year}-${month}-${day} ${weekday}`;
+    console.log(formattedDate); // "2023-05-08 Monday"
+    if (newValue == 1 && !show) {
+      fetchtweet(
+        {
+          sarafiDate: formattedDate,
+        },
+        `${year}-${month}-${day}`,3
+      ).then((res) => {
+        console.log("final latest", res);
+        setShow(res);
+      });
+    } else if(newValue ==2 && !show1) {
+      fetchtweet(
+        {
+          sarafiDate: formattedDate,
+        },
+        `${year}-${month}-${day}`,5
+      ).then((res) => {
+        console.log("final latest", res);
+        setShow1(res);
+      });
+    }
+  };
 
   return (
     <>
@@ -88,54 +139,162 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-      <div style={{textAlign:"center", fontSize:"25px", fontWeight:600, textDecoration:"underline"}}>Check available slots for nagerhole safari</div>
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: "25px",
+            fontWeight: 600,
+            textDecoration: "underline",
+          }}
+        >
+          Check available slots for nagarahole safari
+        </div>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DateCalendar
             shouldDisableDate={shouldDisableDate}
             shouldDisableMonth={shouldDisableMonth}
             onChange={(x) => {
-              setShow(false)
-              let temp = new Date(x);
+              setShow(false);
+              setShow1(false);
+              setValue("1");
+              setDate(x);
               const date = new Date(x);
               const year = date.getFullYear();
               const month = String(date.getMonth() + 1).padStart(2, "0");
               const day = String(date.getDate()).padStart(2, "0");
-              const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+              const weekday = new Intl.DateTimeFormat("en-US", {
+                weekday: "long",
+              }).format(date);
               const formattedDate = `${year}-${month}-${day} ${weekday}`;
-              console.log(formattedDate); // "2023-05-08 Monday"   
-              console.log('time', `${year}-${month}-${day}`, new Date(x))
-              fetchtweet({
-                sarafiDate: formattedDate,
-              },`${year}-${month}-${day}`).then((res) => {
+              console.log(formattedDate); // "2023-05-08 Monday"
+              console.log("time", `${year}-${month}-${day}`, new Date(x));
+              fetchtweet(
+                {
+                  sarafiDate: formattedDate,
+                },
+                `${year}-${month}-${day}`,3
+              ).then((res) => {
                 console.log("final latest", res);
                 setShow(res);
               });
-              setOpen(true)
-
+              setOpen(true);
             }}
           />
         </LocalizationProvider>
+        <div class="button-container">
+  <p class="sibling-text">If you find your slot, visit <a href="https://tickets.nagaraholetigerreserve.com/">https://tickets.nagaraholetigerreserve.com/</a> to book your safari.</p>
+  <button className="gradient-button" onClick={() => {
+       window.open("https://tickets.nagaraholetigerreserve.com/safaries", "_blank");
 
-        <Dialog onClose={()=>{
-                        setOpen(false)
+  }}>
+        Visit now
+      </button></div>
 
-        }} open={open}>
-      <DialogTitle style={{fontWeight:900}}>Available slot for the day</DialogTitle>
-      {show && (
-          <div style={{display:"flex", flexDirection:"column", gap:10}}>
-            {Object.entries(show).map(([timeSlot, count]) => (
-            <div className="time-slot" style={{backgroundColor:timeSlot.includes("am") ? "white" :"black", color:timeSlot.includes("am") ? "#000000d9" :"white"}} key={timeSlot}>
-              <span className="time-slot-name">{timeSlot}</span>
-              <span className="time-slot-count" style={{color: count<5 ? "red": "green"}}>{count }</span>
-              <div className="time-slot-chip">{timeSlot.includes("am") ? "⛅" : "🌜"}</div>
 
-            </div>
-            ))}
-          </div>
-        )}
-      </Dialog>
 
-        
+
+        <Dialog
+          onClose={() => {
+            setOpen(false);
+          }}
+          open={open}
+        >
+          <DialogTitle style={{ fontWeight: 900 }}>
+            Available slot for the day (bus)
+          </DialogTitle>
+
+          <Box sx={{ width: "100%", typography: "body1" }}>
+            <TabContext value={value}>
+              <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <TabList
+                  onChange={handleChange}
+                  aria-label="lab API tabs example"
+                >
+                  <Tab label="Kakanakote (Kabini)" value="1" />
+                  <Tab label="Nanachi Safari" value="2" />
+                </TabList>
+              </Box>
+              <TabPanel value="1">
+                {show && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    {show?.timeslots.map((timeSlot) => (
+                      <div
+                        className="time-slot"
+                        style={{
+                          backgroundColor: timeSlot.includes("am")
+                            ? "white"
+                            : "black",
+                          color: timeSlot.includes("am")
+                            ? "#000000d9"
+                            : "white",
+                        }}
+                        key={timeSlot}
+                      >
+                        <span className="time-slot-name">{timeSlot}</span>
+                        <span
+                          className="time-slot-count"
+                          style={{
+                            color: show.result[timeSlot] < 5 ? "red" : "green",
+                          }}
+                        >
+                          {show.result[timeSlot]}
+                        </span>
+                        <div className="time-slot-chip">
+                          {timeSlot.includes("am") ? "⛅" : "🌜"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabPanel>
+              <TabPanel value="2">
+                {show1 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    {show1?.timeslots.map((timeSlot) => (
+                      <div
+                        className="time-slot"
+                        style={{
+                          backgroundColor: timeSlot.includes("am")
+                            ? "white"
+                            : "black",
+                          color: timeSlot.includes("am")
+                            ? "#000000d9"
+                            : "white",
+                        }}
+                        key={timeSlot}
+                      >
+                        <span className="time-slot-name">{timeSlot}</span>
+                        <span
+                          className="time-slot-count"
+                          style={{
+                            color: show1.result[timeSlot] < 5 ? "red" : "green",
+                          }}
+                        >
+                          {show1.result[timeSlot]}
+                        </span>
+                        <div className="time-slot-chip">
+                          {timeSlot.includes("am") ? "⛅" : "🌜"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabPanel>
+            </TabContext>
+          </Box>
+        </Dialog>
       </main>
     </>
   );

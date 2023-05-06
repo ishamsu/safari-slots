@@ -252,6 +252,7 @@ export default function Home() {
                       display: "flex",
                       flexDirection: "column",
                       gap: 10,
+                      alignItems:"center"
                     }}
                   >
                     {show?.timeslots.map((timeSlot) => (
@@ -291,6 +292,8 @@ export default function Home() {
                       display: "flex",
                       flexDirection: "column",
                       gap: 10,
+                      alignItems:"center"
+
                     }}
                   >
                     {show1?.timeslots.map((timeSlot) => (

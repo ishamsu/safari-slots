@@ -220,7 +220,7 @@ export default function Home() {
         <span role="img" aria-label="info" className="info-icon">
           ℹ️
         </span>
-        <span className="why-text-label">Why I created this page</span>
+        <span className="why-text-label">Why I created this page?</span>
       </div>
     </div>
 

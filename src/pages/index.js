@@ -12,9 +12,10 @@ import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
+import { useRouter } from "next/router";
 const inter = Inter({ subsets: ["latin"] });
 
-const fetchCount = async (payload,id) => {
+const fetchCount = async (payload, id) => {
   return await axios
     .post(`api/seats/${id}`, payload, {
       headers: {
@@ -26,7 +27,7 @@ const fetchCount = async (payload,id) => {
     });
 };
 
-const getTimeSlotVehicleCount = async (data, date,id) => {
+const getTimeSlotVehicleCount = async (data, date, id) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(data, "text/html");
   const options = doc.querySelectorAll("#timeslots option");
@@ -38,11 +39,14 @@ const getTimeSlotVehicleCount = async (data, date,id) => {
   }
   const vehicleCounts = await Promise.all(
     Object.keys(timeslots).map((item) => {
-      return fetchCount({
-        timeslots: item,
-        startSafari: date,
-        transportation: "1",
-      },id);
+      return fetchCount(
+        {
+          timeslots: item,
+          startSafari: date,
+          transportation: "1",
+        },
+        id
+      );
     })
   );
   const timeSlotVehicleCount = {
@@ -57,7 +61,7 @@ const getTimeSlotVehicleCount = async (data, date,id) => {
 
   return timeSlotVehicleCount;
 };
-const fetchtweet = async (payload, isoDate,id) => {
+const fetchtweet = async (payload, isoDate, id) => {
   return await axios
     .post(`api/time-slot/${id}`, payload, {
       headers: {
@@ -65,7 +69,7 @@ const fetchtweet = async (payload, isoDate,id) => {
       },
     })
     .then((result) => {
-      return getTimeSlotVehicleCount(result.data, isoDate,id).then((data) => {
+      return getTimeSlotVehicleCount(result.data, isoDate, id).then((data) => {
         console.log("first", data);
         return data;
       });
@@ -94,6 +98,7 @@ export default function Home() {
   const [open, setOpen] = useState(false);
   const [dateShow, setDate] = useState("");
   const [value, setValue] = useState("1");
+  const router = useRouter();
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -112,17 +117,19 @@ export default function Home() {
         {
           sarafiDate: formattedDate,
         },
-        `${year}-${month}-${day}`,3
+        `${year}-${month}-${day}`,
+        3
       ).then((res) => {
         console.log("final latest", res);
         setShow(res);
       });
-    } else if(newValue ==2 && !show1) {
+    } else if (newValue == 2 && !show1) {
       fetchtweet(
         {
           sarafiDate: formattedDate,
         },
-        `${year}-${month}-${day}`,5
+        `${year}-${month}-${day}`,
+        5
       ).then((res) => {
         console.log("final latest", res);
         setShow1(res);
@@ -172,7 +179,8 @@ export default function Home() {
                 {
                   sarafiDate: formattedDate,
                 },
-                `${year}-${month}-${day}`,3
+                `${year}-${month}-${day}`,
+                3
               ).then((res) => {
                 console.log("final latest", res);
                 setShow(res);
@@ -182,16 +190,39 @@ export default function Home() {
           />
         </LocalizationProvider>
         <div class="button-container">
-  <p class="sibling-text">If you find your slot, visit <a href="https://tickets.nagaraholetigerreserve.com/">https://tickets.nagaraholetigerreserve.com/</a> to book your safari.</p>
-  <button className="gradient-button" onClick={() => {
-       window.open("https://tickets.nagaraholetigerreserve.com/safaries", "_blank");
+          <p class="sibling-text">
+            If you find your slot, visit{" "}
+            <a href="https://tickets.nagaraholetigerreserve.com/">
+              https://tickets.nagaraholetigerreserve.com/
+            </a>{" "}
+            to book your safari.
+          </p>
+          <button
+            className="gradient-button"
+            onClick={() => {
+              window.open(
+                "https://tickets.nagaraholetigerreserve.com/safaries",
+                "_blank"
+              );
+            }}
+          >
+            Visit now
+          </button>
+        </div>
 
-  }}>
-        Visit now
-      </button></div>
 
 
+        
 
+
+        <div className="why-text-container">
+      <div className="why-text" onClick={()=>{router.push("/about-this-page");}}>
+        <span role="img" aria-label="info" className="info-icon">
+          ℹ️
+        </span>
+        <span className="why-text-label">Why I created this page</span>
+      </div>
+    </div>
 
         <Dialog
           onClose={() => {
